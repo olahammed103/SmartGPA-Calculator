@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart GPA Calculator</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      padding: 20px;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    }
+
+    h2 {
+      text-align: center;
+      color: #203a43;
+    }
+
+    .username {
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    select, button {
+      padding: 10px 14px;
+      border-radius: 6px;
+      border: none;
+      font-size: 14px;
+    }
+
+    select {
+      background: #eef3f7;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background: linear-gradient(135deg, #1d976c, #93f9b9);
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+
+    th {
+      background: #203a43;
+      color: white;
+    }
+
+    input {
+      width: 90%;
+      padding: 6px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      background: #f5f5f5;
+      border-radius: 8px;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 12px;
+      color: #555;
+    }
+
+    /* MODAL */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+    }
+
+    .modal-content {
+      background: white;
+      margin: 10% auto;
+      padding: 20px;
+      width: 90%;
+      max-width: 400px;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .close {
+      float: right;
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .donation-box {
+      background: #f2f8f9;
+      padding: 12px;
+      border-radius: 8px;
+      margin: 10px 0;
+    }
+
+    .paid-btn {
+      width: 100%;
+      margin-top: 10px;
+      padding: 10px;
+      background: #25D366;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .paid-btn:hover {
+      background: #1ebe5d;
+    }
+
+    #copyMsg, #refMsg {
+      color: green;
+      font-size: 12px;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container" id="printArea">
+  <h2>Smart GPA / CGPA Calculator</h2>
+
+  <div class="username">Olasunkanmi Hammed Ayomide</div>
+
+  <div class="controls">
+    <select id="institution">
+      <option value="poly">Polytechnic</option>
+      <option value="uni">University</option>
+      <option value="coe">College of Education</option>
+    </select>
+
+    <div class="vertical-buttons">
+      <button onclick="savePDF()">Save PDF</button>
+      <button onclick="openDonationModal()">Support / Donate</button>
+    </div>
+  </div>
+
+  <table id="gpaTable">
+    <tr>
+      <th>Course Code</th>
+      <th>Unit</th>
+      <th>Score</th>
+      <th>Grade</th>
+      <th>GP</th>
+      <th>Weighted Point</th>
+    </tr>
+  </table>
+
+  <div class="result">
+    <p><strong>Total Units:</strong> <span id="totalUnits">0</span></p>
+    <p><strong>Total Weighted Points:</strong> <span id="totalWP">0</span></p>
+    <p><strong>CGPA:</strong> <span id="cgpa">0.00</span></p>
+    <p><strong>Classification:</strong> <span id="classify">-</span></p>
+  </div>
+
+  <div class="footer">Generated using Smart GPA Calculator</div>
+</div>
+
+<!-- Donation Modal -->
+<div id="donationModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeDonationModal()">&times;</span>
+    <h3>Support This Project 💚</h3>
+    <p>Your support helps improve this calculator.</p>
+    <div class="donation-box">
+      <p><strong>Account Name:</strong><br>Olasunkanmi Hammed Ayo</p>
+      <p><strong>Account Number:</strong><br>2056627394</p>
+      <p><strong>Bank:</strong><br>United Bank for Africa (UBA)</p>
+    </div>
+    <button onclick="copyAccount()">Copy Account Number</button>
+    <input type="number" id="donationAmount"
+           placeholder="Enter amount (₦)"
+           style="width:100%; padding:8px; margin-top:10px; border-radius:6px; border:1px solid #ccc;">
+    <button onclick="confirmPayment()" class="paid-btn">✅ I have paid</button>
+    <p id="copyMsg"></p>
+    <p id="refMsg"></p>
+  </div>
+</div>
+
+<script>
+function addRow() {
+  const table = document.getElementById("gpaTable");
+  const row = table.insertRow();
+  for (let i = 0; i < 3; i++) {
+    const cell = row.insertCell();
+    const input = document.createElement("input");
+    input.addEventListener("input", autoUpdate);
+    cell.appendChild(input);
+  }
+  row.insertCell(); // Grade
+  row.insertCell(); // GP
+  row.insertCell(); // Weighted Point
+}
+
+function gradePoint(score) {
+  const inst = document.getElementById("institution").value;
+  if (inst === "poly") {
+    if (score >= 75) return ["A", 4];
+    if (score >= 70) return ["AB", 3.5];
+    if (score >= 65) return ["B", 3.25];
+    if (score >= 60) return ["BC", 3];
+    if (score >= 55) return ["C", 2.75];
+    if (score >= 50) return ["CD", 2.5];
+    if (score >= 45) return ["D", 2.25];
+    if (score >= 40) return ["E", 2];
+    return ["F", 0];
+  }
+  if (inst === "uni") {
+    if (score >= 70) return ["A", 5];
+    if (score >= 60) return ["B", 4];
+    if (score >= 50) return ["C", 3];
+    if (score >= 45) return ["D", 2];
+    if (score >= 40) return ["E", 1];
+    return ["F", 0];
+  }
+  if (inst === "coe") {
+    if (score >= 70) return ["A", 4];
+    if (score >= 60) return ["B", 3];
+    if (score >= 50) return ["C", 2];
+    if (score >= 45) return ["D", 1];
+    return ["F", 0];
+  }
+}
+
+function getClassification(cgpa) {
+  const inst = document.getElementById("institution").value;
+  if (inst === "poly" || inst === "coe") {
+    if (cgpa >= 3.5) return "Upper Credit";
+    if (cgpa >= 3.0) return "Lower Credit";
+    if (cgpa >= 2.5) return "Pass";
+    return "Fail";
+  }
+  if (inst === "uni") {
+    if (cgpa >= 4.5) return "First Class";
+    if (cgpa >= 3.5) return "Second Class Upper";
+    if (cgpa >= 2.5) return "Second Class Lower";
+    if (cgpa >= 1.5) return "Third Class";
+    return "Fail";
+  }
+  return "-";
+}
+
+function calculateGPA() {
+  const table = document.getElementById("gpaTable");
+  let totalUnits = 0, totalWP = 0;
+
+  for (let i = 1; i < table.rows.length; i++) {
+    const unit = parseFloat(table.rows[i].cells[1].children[0].value) || 0;
+    const score = parseFloat(table.rows[i].cells[2].children[0].value) || 0;
+    const [grade, gp] = gradePoint(score);
+    const wp = unit * gp;
+
+    table.rows[i].cells[3].innerText = grade;
+    table.rows[i].cells[4].innerText = gp.toFixed(2);
+    table.rows[i].cells[5].innerText = wp.toFixed(2);
+
+    totalUnits += unit;
+    totalWP += wp;
+  }
+
+  const cgpa = totalUnits ? (totalWP / totalUnits).toFixed(2) : 0;
+  document.getElementById("totalUnits").innerText = totalUnits;
+  document.getElementById("totalWP").innerText = totalWP.toFixed(2);
+  document.getElementById("cgpa").innerText = cgpa;
+  document.getElementById("classify").innerText = getClassification(cgpa);
+}
+
+function autoUpdate() {
+  calculateGPA();
+  const table = document.getElementById("gpaTable");
+  const lastRow = table.rows[table.rows.length - 1];
+  const inputs = lastRow.querySelectorAll("input");
+  let filled = false;
+  inputs.forEach(input => { if (input.value.trim() !== "") filled = true; });
+  if (filled) addRow();
+}
+
+function savePDF() {
+  const table = document.getElementById("gpaTable");
+  // Remove fully empty rows before saving
+  for (let i = table.rows.length - 1; i > 0; i--) {
+    const cells = table.rows[i].cells;
+    const allEmpty = [...cells].slice(0,3).every(cell => !cell.children[0].value.trim());
+    if (allEmpty) table.deleteRow(i);
+  }
+  html2pdf().from(document.getElementById("printArea")).save("GPA_Result.pdf");
+}
+
+function openDonationModal() { document.getElementById("donationModal").style.display = "block"; }
+function closeDonationModal() { document.getElementById("donationModal").style.display = "none"; }
+function copyAccount() { navigator.clipboard.writeText("2056627394"); document.getElementById("copyMsg").innerText = "Account number copied!"; }
+function confirmPayment() {
+  const amount = document.getElementById("donationAmount").value;
+  if (!amount || amount <= 0) { alert("Please enter the amount you donated."); return; }
+  const date = new Date();
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth()+1).padStart(2,'0');
+  const dd = String(date.getDate()).padStart(2,'0');
+  const randomNum = Math.floor(1000 + Math.random()*9000);
+  const refID = `REF${yyyy}${mm}${dd}-${randomNum}`;
+  document.getElementById("refMsg").innerText = "Your reference ID: " + refID;
+  const message = `Hello, I just donated ₦${amount} (Ref: ${refID}) using your Smart GPA Calculator. Please confirm.`;
+  window.open("https://wa.me/2347033465954?text=" + encodeURIComponent(message), "_blank");
+}
+
+window.onclick = function(e) { if (e.target === document.getElementById("donationModal")) closeDonationModal(); };
+
+// Initialize table with 1 empty row
+addRow();
+</script>
+
+</body>
+</html>
